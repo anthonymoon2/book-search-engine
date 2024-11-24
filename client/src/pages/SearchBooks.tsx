@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useMutation, useQuery } from '@apollo/client';
 import type { FormEvent } from 'react';
+
 import {
   Container,
   Col,
@@ -10,22 +12,35 @@ import {
 } from 'react-bootstrap';
 
 import Auth from '../utils/auth';
-import { saveBook, searchGoogleBooks } from '../utils/API';
+import { searchGoogleBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 import type { Book } from '../models/Book';
 import type { GoogleAPIBook } from '../models/GoogleAPIBook';
 
-const SearchBooks = () => {
-  // create state for holding returned google api data
-  const [searchedBooks, setSearchedBooks] = useState<Book[]>([]);
-  // create state for holding our search field data
-  const [searchInput, setSearchInput] = useState('');
+// import mutations
+import { SAVE_BOOK } from '../utils/mutations';
+import { QUERY_ME } from '../utils/mutations';
 
-  // create state to hold saved bookId values
+const SearchBooks = () => {
+  // create states 
+  const [searchedBooks, setSearchedBooks] = useState<Book[]>([]);
+  const [searchInput, setSearchInput] = useState('');
   const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
 
+  // create mutations for saving a book
+  const [saveBook] = useMutation(SAVE_BOOK);
+  
+  // call ME query
+  const { data } = useQuery(QUERY_ME);
+  // add profile to variable
+  const profile = data?.me || {};
+  const profileIdString = profile._id;
+  console.log(`PROFILE ID! ${profileIdString}`);
+  console.log(`PROFILE books! ${JSON.stringify(profile.savedBooks)}`);
+  // const firstBook = profile.savedBooks[0];
+  // console.log(`PROFILE title! ${JSON.stringify(firstBook)}`);
+
   // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
-  // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
   useEffect(() => {
     return () => saveBookIds(savedBookIds);
   });
@@ -49,8 +64,8 @@ const SearchBooks = () => {
 
       const bookData = items.map((book: GoogleAPIBook) => ({
         bookId: book.id,
-        authors: book.volumeInfo.authors || ['No author to display'],
         title: book.volumeInfo.title,
+        authors: book.volumeInfo.authors || ['No author to display'],
         description: book.volumeInfo.description,
         image: book.volumeInfo.imageLinks?.thumbnail || '',
       }));
@@ -67,24 +82,26 @@ const SearchBooks = () => {
     // find the book in `searchedBooks` state by the matching id
     const bookToSave: Book = searchedBooks.find((book) => book.bookId === bookId)!;
 
-    // get token
-    const token = Auth.loggedIn() ? Auth.getToken() : null;
-
-    if (!token) {
-      return false;
-    }
-
     try {
-      const response = await saveBook(bookToSave, token);
+      const {data} = await saveBook({
+        variables: {
+          input: {
+            uid: profileIdString,
+            title: bookToSave.title,
+            image: bookToSave.image,
+            description: bookToSave.description,
+            bookId: bookToSave.bookId,
+            authors: bookToSave.authors,
+          },
+        },
+      })
+      console.log("Book saved!")
 
-      if (!response.ok) {
-        throw new Error('something went wrong!');
+      if (!data) {
+        throw new Error('Something went wrong while saving the book!');
       }
-
-      // if book successfully saves to user's account, save book id to state
-      setSavedBookIds([...savedBookIds, bookToSave.bookId]);
     } catch (err) {
-      console.error(err);
+      console.error('Error saving book:', err);
     }
   };
 

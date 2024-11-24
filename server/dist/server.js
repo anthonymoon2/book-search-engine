@@ -8,7 +8,7 @@ import { typeDefs, resolvers } from './schemas/index.js';
 import { authenticateToken } from './services/auth.js';
 const server = new ApolloServer({
     typeDefs,
-    resolvers
+    resolvers,
 });
 const startApolloServer = async () => {
     await server.start();
@@ -32,3 +32,4 @@ const startApolloServer = async () => {
     });
 };
 startApolloServer();
+//# sourceMappingURL=server.js.map

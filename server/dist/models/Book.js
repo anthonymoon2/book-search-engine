@@ -18,9 +18,6 @@ const bookSchema = new Schema({
     image: {
         type: String,
     },
-    link: {
-        type: String,
-    },
     title: {
         type: String,
         required: true,
@@ -28,3 +25,4 @@ const bookSchema = new Schema({
 });
 const Book = model('Book', bookSchema);
 export default Book;
+//# sourceMappingURL=Book.js.map

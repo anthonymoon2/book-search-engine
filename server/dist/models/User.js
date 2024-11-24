@@ -48,3 +48,4 @@ userSchema.virtual('bookCount').get(function () {
 });
 const User = model('User', userSchema);
 export default User;
+//# sourceMappingURL=User.js.map

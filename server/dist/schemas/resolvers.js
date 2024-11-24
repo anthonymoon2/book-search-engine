@@ -1,4 +1,4 @@
-import { User } from "../models/index.js";
+import { Book, User } from "../models/index.js";
 import { signToken, AuthenticationError } from "../services/auth.js";
 const resolvers = {
     Query: {
@@ -37,13 +37,71 @@ const resolvers = {
             return { token, user };
         },
         addUser: async (_parent, { input }) => {
-            // create a new user with the rovided username, email, and password
+            // create a new user with the provided username, email, and password
             const user = await User.create({ ...input });
             // Sign a token with the user's information
             const token = signToken(user.username, user.email, user._id);
             // Return the token and the user
             return { token, user };
+        },
+        saveBook: async (_, { input: { uid, bookId, title, description, image, authors } }) => {
+            try {
+                // create a new book
+                const book = await Book.create({
+                    bookId: bookId,
+                    title: title,
+                    description: description,
+                    image: image,
+                    authors: authors
+                });
+                const user = await User.findById(uid);
+                if (!user) {
+                    throw new Error('User not found');
+                }
+                user.savedBooks.push(book._id);
+                await user.save();
+                return book;
+            }
+            catch (err) {
+                console.error("Error adding book: ", err);
+                return null;
+            }
+        },
+        deleteBook: async (_, { uid, bookID }) => {
+            try {
+                console.log(`USER ID ${uid}`);
+                console.log(`BOOK ID ${bookID}`);
+                // find the User by id
+                const user = await User.findById(uid);
+                if (!user) {
+                    throw new Error("User not found");
+                }
+                // find book by id
+                const book = await Book.findOne({ _id: bookID });
+                if (!book) {
+                    throw new Error("Book not found");
+                }
+                // remove the book's object id from the user's savedBooks Array
+                user.savedBooks = user.savedBooks.filter((savedBookId) => savedBookId.toString() !== book._id.toString());
+                // save the updated user
+                await user.save();
+                // delete the book itself from the database
+                await Book.findByIdAndDelete(book._id);
+                // return message
+                return {
+                    success: true,
+                    message: "Book deleted successfully",
+                };
+            }
+            catch (err) {
+                console.error("Error deleting book: ", err);
+                return {
+                    success: false,
+                    message: "Failed to delete book",
+                };
+            }
         }
     }
 };
 export default resolvers;
+//# sourceMappingURL=resolvers.js.map

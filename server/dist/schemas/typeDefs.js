@@ -9,12 +9,20 @@ const typeDefs = `
     }
 
     type Book {
+        bookId: String!
+        title: String
+        authors: [String]
+        description: String
+        image: String
+    }
+
+    input BookInput{
+        uid: String
         bookId: String
         title: String
         authors: [String]
         description: String
         image: String
-        link: String
     }
 
     input UserInput {
@@ -33,9 +41,17 @@ const typeDefs = `
         me: User
     }
 
+    type MutationResponse {
+        success: Boolean!
+        message: String!
+    }
+
     type Mutation {
         login(email: String!, password: String!): Auth
         addUser(input: UserInput!): Auth
+        saveBook(input: BookInput!): Book
+        deleteBook(uid: String, bookID: String): MutationResponse
     }
 `;
 export default typeDefs;
+//# sourceMappingURL=typeDefs.js.map
