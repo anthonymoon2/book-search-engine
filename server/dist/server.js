@@ -6,6 +6,8 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { typeDefs, resolvers } from './schemas/index.js';
 import { authenticateToken } from './services/auth.js';
+const PORT = process.env.PORT || 3001;
+const app = express();
 const server = new ApolloServer({
     typeDefs,
     resolvers,
@@ -13,8 +15,6 @@ const server = new ApolloServer({
 const startApolloServer = async () => {
     await server.start();
     await db();
-    const PORT = process.env.PORT || 3001;
-    const app = express();
     app.use(express.urlencoded({ extended: false }));
     app.use(express.json());
     app.use('/graphql', expressMiddleware(server, {

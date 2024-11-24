@@ -1,7 +1,7 @@
 import { Book, User } from "../models/index.js";
 import { IUser } from "../models/User.js";
 import { signToken, AuthenticationError } from "../services/auth.js";
-import { Types } from "mongoose";
+import { Schema } from "mongoose";
 
 interface Context {
     user?: IUser | null;
@@ -107,7 +107,7 @@ const resolvers = {
                     throw new Error('User not found');
                 }
                 
-                user.savedBooks.push(book._id as Types.ObjectId);
+                user.savedBooks.push(book._id as unknown as Schema.Types.ObjectId);
                 await user.save();
                 return book;
             } catch (err) {
